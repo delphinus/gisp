@@ -1,0 +1,151 @@
+#!/usr/bin/perl
+use v5.30;
+use feature qw(signatures);
+use warnings;
+no warnings qw(experimental::signatures);
+use Encode;
+use Getopt::Long qw(:config posix_default no_ignore_case bundling auto_help);
+use IO::Select;
+use IO::Socket;
+use JSON;
+use LWP::UserAgent;
+use Time::Piece;
+use URI;
+use URI::QueryParam;
+
+use constant +{
+    VERSION_STRING => 'gimp/0.0.1',
+    CLIENT_END => 0,
+    CLIENT_REQUEST => 1,
+    CLIENT_VERSION => 2,
+    CLIENT_HOST => 3,
+    SERVER_ERROR => 0,
+    SERVER_FOUND => 1,
+    SERVER_NOT_FOUND => 4,
+    BUF_SIZE => 512,
+    TIMEOUT => 10,
+    CACHE_EXPIRATION => 60 * 60,
+};
+
+binmode STDOUT, ':utf8';
+binmode STDERR, ':utf8';
+
+sub logger($fmt, @args) {
+    warn sprintf "[gisp] %s $fmt\n", localtime->strftime('%FT%T'), @args;
+}
+
+sub process($host, $port) {
+    my $listner = IO::Socket::INET->new(
+        Proto => 'tcp',
+        LocalAddr => $host,
+        LocalPort => $port,
+        Listen => SOMAXCONN,
+        Reuse => 1,
+    ) or die "can't listen: $!";
+
+    my $selector = IO::Select->new($listner);
+
+    while (my @ready = $selector->can_read) {
+        for my $socket (@ready) {
+            if ($socket == $listner) {
+                my $new_socket = $listner->accept;
+                $selector->add($new_socket);
+            } else {
+                while ($socket->sysread(my $buf, BUF_SIZE)) {
+                    my $command = substr $buf, 0, 1;
+                    logger 'command: %d', $command;
+                    if ($command == CLIENT_END) {
+                        break;
+                    } elsif ($command == CLIENT_REQUEST) {
+                        my $command_end = (index $buf, ' ', 1) || (index $buf, "\n", 1);
+                        my $kana = substr $buf, 1, $command_end - 1;
+                        my $decoded = decode(eucjp => $kana);
+                        logger 'kana: %s', $decoded;
+                        my $result = eval {
+                            if (my $kanji = search($decoded)) {
+                                sprintf "%d/%s\n", SERVER_FOUND, $kanji;
+                            } else {
+                                sprintf "%d%s \n", SERVER_NOT_FOUND, $decoded;
+                            }
+                        };
+                        if ($@) {
+                            logger 'error in process: %s', $@;
+                            $result = sprintf "%d\n", SERVER_ERROR;
+                        }
+                        logger 'result: %s', $result;
+                        $socket->write(encode(eucjp => $result));
+                    } elsif ($command == CLIENT_VERSION) {
+                        $socket->write(VERSION_STRING . ' ');
+                    } elsif ($command == CLIENT_HOST) {
+                        my $result = sprintf '%s:%s: ', $socket->sockhost, $socket->sockport;
+                        $socket->write($result);
+                    }
+                    $selector->remove($socket);
+                    $socket->close;
+                }
+            }
+        }
+    }
+}
+
+our %CACHE;
+sub search($kana, $now = time) {
+    if ($CACHE{$kana} && $now < $CACHE{$kana}{ctime} + CACHE_EXPIRATION) {
+        $CACHE{$kana}{kanji};
+    } else {
+        my $kanji = google_ime($kana);
+        if (defined $kanji) {
+            $CACHE{$kana} = {
+                ctime => $now,
+                kanji => $kanji,
+            };
+        }
+        $kanji;
+    }
+}
+
+sub make_uri($kana) {
+    (my $text = $kana) =~ s/([a-z]?)$/,$1/;
+    my $uri = URI->new('http://www.google.com/transliterate');
+    $uri->query_param('langpair', 'ja-Hira|ja');
+    $uri->query_param('text', $text);
+    $uri;
+}
+
+sub google_ime($kana) {
+    my $ua = LWP::UserAgent->new;
+    $ua->timeout(TIMEOUT);
+    $ua->env_proxy;
+    my $result = eval {
+        my $response = $ua->get(make_uri($kana));
+        if ($response->is_success) {
+            my $content = $response->content;
+            my $decoded = decode_json($content);
+            join '/', $decoded->[0][1]->@*;
+        } else {
+            undef;
+        }
+    };
+    if ($@) {
+        logger 'error in google_ime: %s', $@;
+    }
+    $result;
+}
+
+sub main {
+    my %opt = (
+        host => '127.0.0.1',
+        port => 55100,
+    );
+    GetOptions(
+        \%opt, qw(
+            host|h=s
+            port|p=i
+        ),
+    ) or pod2usage(1);
+    process($opt{host}, $opt{port})
+}
+
+main if $0 eq __FILE__;
+
+1;
