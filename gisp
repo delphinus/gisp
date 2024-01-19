@@ -5,10 +5,10 @@ use warnings;
 no warnings qw(experimental::signatures);
 use Encode;
 use Getopt::Long qw(:config posix_default no_ignore_case bundling auto_help);
+use HTTP::Tiny;
 use IO::Select;
 use IO::Socket;
 use JSON;
-use LWP::UserAgent;
 use Time::Piece;
 use URI;
 use URI::QueryParam;
@@ -113,14 +113,10 @@ sub make_uri($kana) {
 }
 
 sub google_ime($kana) {
-    my $ua = LWP::UserAgent->new;
-    $ua->timeout(TIMEOUT);
-    $ua->env_proxy;
     my $result = eval {
-        my $response = $ua->get(make_uri($kana));
-        if ($response->is_success) {
-            my $content = $response->content;
-            my $decoded = decode_json($content);
+        my $response = HTTP::Tiny->new(+{ timeout => TIMEOUT })->get(make_uri($kana));
+        if ($response->{success}) {
+            my $decoded = decode_json($response->{content});
             join '/', $decoded->[0][1]->@*;
         } else {
             undef;

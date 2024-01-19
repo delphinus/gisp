@@ -28,8 +28,8 @@ subtest 'google_ime()' => sub {
     subtest 'when Google returns valid response' => sub {
 
         subtest 'should return valid result' => sub {
-            local *LWP::UserAgent::get = sub {
-                HTTP::Response->new(200, undef, undef, encode(utf8 => <<EOF));
+            local *HTTP::Tiny::get = sub {
+                +{ success => 1, content => encode(utf8 => <<EOF) };
 [["あ",["あ","亜","在","有","ア"]]]
 EOF
             };
@@ -41,20 +41,16 @@ EOF
     subtest 'when Google returns invalid response' => sub {
 
         subtest 'should return undef' => sub {
-            local *LWP::UserAgent::get = sub {
-                HTTP::Response->new(500);
-            };
+            local *HTTP::Tiny::get = sub { +{ success => 0 }, };
 
             is google_ime('あ'), undef, 'google_ime() should return undef';
         };
     };
 
-    subtest 'when LWP::UserAgent::get occurs error' => sub {
+    subtest 'when HTTP::Tiny::get occurs error' => sub {
 
         subtest 'should return undef' => sub {
-            local *LWP::UserAgent::get = sub {
-                die 'hoge error';
-            };
+            local *HTTP::Tiny::get = sub { die 'hoge error' };
 
             my $result;
             lives_ok sub { $result = google_ime('あ') }, 'google_ime() does not die';
@@ -122,10 +118,10 @@ subtest 'process()' => sub {
         }
     };
 
-    local *LWP::UserAgent::get = sub {
+    local *HTTP::Tiny::get = sub {
         my $response = load;
         my $content = encode_json($response->{data}) . "\n";
-        HTTP::Response->new($response->{code}, undef, undef, $content);
+        +{ success => int($response->{code} / 100) == 2, content => $content };
     };
 
     local *main::CACHE_EXPIRATION = sub { -1 };
