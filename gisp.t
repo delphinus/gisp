@@ -1,14 +1,14 @@
 use utf8;
-use strict;
+use v5.30;
 use feature qw(signatures state);
 use warnings;
-no warnings qw(experimental::signatures);
 use Test::Most;
 
 use IO::Socket;
 use Path::Tiny;
 
 require './gisp';
+no warnings qw(experimental::signatures redefine);
 
 subtest 'make_uri()' => sub {
 
@@ -63,14 +63,15 @@ subtest 'search()' => sub {
 
     my $mock_result;
     local *google_ime = sub { $mock_result };
+    my $cache_path = Path::Tiny->tempfile;
 
     subtest 'when cache hit' => sub {
 
         subtest 'should return cached result' => sub {
             $mock_result = 'foo';
-            is search('あ'), 'foo', 'search() should return "foo" at the first time';
+            is search('あ', $cache_path), 'foo', 'search() should return "foo" at the first time';
             $mock_result = 'bar';
-            is search('あ'), 'foo', 'search() should return "foo" again';
+            is search('あ', $cache_path), 'foo', 'search() should return "foo" again';
         };
     };
 
@@ -78,9 +79,9 @@ subtest 'search()' => sub {
 
         subtest 'should return valid result' => sub {
             $mock_result = 'foo';
-            is search('あ'), 'foo', 'search() should return "foo" at the first time';
+            is search('あ', $cache_path), 'foo', 'search() should return "foo" at the first time';
             $mock_result = 'bar';
-            is search('い'), 'bar', 'search() should return "bar" time time';
+            is search('い', $cache_path), 'bar', 'search() should return "bar" time time';
         };
     };
 
@@ -89,13 +90,13 @@ subtest 'search()' => sub {
         subtest 'should return valid result' => sub {
             my $now = time;
             $mock_result = 'foo';
-            is search('あ', $now), 'foo', 'search() should return "foo" at the first time';
+            is search('あ', $cache_path, $now), 'foo', 'search() should return "foo" at the first time';
             $mock_result = 'bar';
-            is search('あ', $now + CACHE_EXPIRATION()), 'bar', 'search() should return "bar" time time';
+            is search('あ', $cache_path, $now + CACHE_EXPIRATION()), 'bar', 'search() should return "bar" time time';
         };
     };
 
-    %main::CACHE = ();
+    undef $main::CACHE;
 };
 
 subtest 'process()' => sub {
@@ -109,12 +110,12 @@ subtest 'process()' => sub {
     }
 
     my $original_search = \&search;
-    local *search = sub ($kana) {
+    local *search = sub ($kana, $cache_path) {
         my $response = load;
         if ($response->{code} == -1) {
             die 'hoge error';
         } else {
-            $original_search->($kana);
+            $original_search->($kana, $cache_path);
         }
     };
 
@@ -140,7 +141,7 @@ subtest 'process()' => sub {
     if (!defined (my $pid = fork)) {
         die "can't fork: $!";
     } elsif ($pid == 0) {
-        process($host, $port);
+        process($host, $port, Path::Tiny->tempfile)
     } else {
 
         set_failure_handler(sub { kill TERM => $pid });
@@ -150,7 +151,8 @@ subtest 'process()' => sub {
                 Proto => 'tcp',
                 PeerAddr => $host,
                 PeerPort => $port,
-            ) or die "can't connect to port: $!";
+            );
+            isa_ok $handle, 'IO::Socket::INET';
             print $handle encode(eucjp => $command);
             decode(eucjp => <$handle>);
         };
