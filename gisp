@@ -15,8 +15,10 @@ use Time::Piece;
 use URI;
 use URI::QueryParam;
 
+our $VERSION = '0.0.1';
+our $VERSION_STRING = "gisp/$VERSION";
+
 use constant +{
-    VERSION_STRING => 'gimp/0.0.1',
     CLIENT_END => 0,
     CLIENT_REQUEST => 1,
     CLIENT_VERSION => 2,
@@ -76,7 +78,7 @@ sub process($host, $port, $cache_path) {
                         log_info 'result: %s', $result;
                         $socket->write(encode(eucjp => $result));
                     } elsif ($command == CLIENT_VERSION) {
-                        $socket->write(VERSION_STRING . ' ');
+                        $socket->write($VERSION_STRING . ' ');
                     } elsif ($command == CLIENT_HOST) {
                         my $result = sprintf '%s:%s: ', $socket->sockhost, $socket->sockport;
                         $socket->write($result);
@@ -171,10 +173,12 @@ sub main {
             cache|c=s
             help|h
             verbose|v
+            version
         ),
     ) or pod2usage(1);
     $LOG_LEVEL = 1 if $opt{verbose};
     pod2usage(-exitval => 0, -verbose => 2) if $opt{help};
+    (say $VERSION_STRING), exit if $opt{version};
     process($opt{host}, $opt{port}, path($opt{cache}))
 }
 
