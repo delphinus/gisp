@@ -9,6 +9,7 @@ use Path::Tiny;
 
 require './gisp';
 no warnings qw(experimental::signatures redefine);
+$main::LOG_LEVEL = 1;
 
 subtest 'make_uri()' => sub {
 
