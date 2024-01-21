@@ -11,7 +11,7 @@ class Gisp < Formula
 
   service do
     run [bin / 'gisp', '-v']
-    keeyalive true
+    keepalive true
     log_path "#{Dir.home}/Library/Logs/gisp.log"
     error_log_path "#{Dir.home}/Library/Logs/gisp_error.log"
   end
