@@ -10,7 +10,7 @@ class Gisp < Formula
   head 'https://github.com/delphinus/homebrew-gisp.git'
 
   service do
-    run bin / 'gisp', '-v'
+    run [bin / 'gisp', '-v']
     keeyalive true
     log_path "#{Dir.home}/Library/Logs/gisp.log"
     error_log_path "#{Dir.home}/Library/Logs/gisp_error.log"
