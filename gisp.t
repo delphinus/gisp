@@ -9,7 +9,10 @@ use Path::Tiny;
 
 require './gisp';
 no warnings qw(experimental::signatures redefine);
-$main::LOG_LEVEL = 1;
+{
+    no warnings qw(once);
+    $main::LOG_LEVEL = 1;
+}
 
 subtest 'make_uri()' => sub {
 
@@ -97,7 +100,10 @@ subtest 'search()' => sub {
         };
     };
 
-    undef $main::CACHE;
+    {
+        no warnings 'once';
+        undef $main::CACHE;
+    }
 };
 
 subtest 'process()' => sub {
@@ -182,6 +188,7 @@ subtest 'process()' => sub {
         };
 
         subtest 'when CLIENT_VERSION' => sub {
+            no warnings qw(once);
             is request("2 \n"), "$main::VERSION_STRING ";
         };
 
