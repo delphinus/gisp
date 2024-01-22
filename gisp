@@ -11,6 +11,7 @@ use IO::Socket;
 use JSON;
 use List::Util qw(reduce);
 use Path::Tiny;
+use Pod::Usage;
 use Time::Piece;
 use URI;
 use URI::QueryParam;
@@ -195,3 +196,93 @@ sub log_warn :prototype($@) ($fmt, @args) {
 main if $0 eq __FILE__;
 
 1;
+
+=encoding utf-8
+
+=head1 NAME
+
+gisp - Google IME SKK for Perl
+
+=head1 SYNOPIS
+
+    # Run the server
+    % gisp
+
+    # Specify the host
+    % gisp -h 127.0.0.1 -p 55100
+
+=head1 DESCRIPTION
+
+gisp は SKK プロトコルを実装したサーバーです。読みをリクエストすると返り値として
+変換結果を返します。内部では読みを
+L<Google CGI API for Japanese|https://www.google.co.jp/ime/cgiapi.html> に送信
+し、その返り値をそのまま使っています。
+
+オプションを何も指定しなかった場合、C<127.0.0.1:55100> で待ち受けます。AquaSKK
+などの設定でこのホストとポート番号を指定してください。
+
+レポジトリーには Homebrew Formula を同梱していますので、次のようにしてシステムに
+登録し、ログイン時に自動的に起動させることができます。
+
+    % brew tap delphinus/gisp
+    % brew install gisp
+    % brew services start gisp
+
+NOTE: Homebrew に関する機能は、現時点では macOS でのみ動作を確認しています。
+
+=head1 OPTIONS
+
+=over
+
+=item B<--host> I<host>, B<-h> I<host>
+
+サーバーが起動するホスト名です。
+
+Default: C<"127.0.0.1">
+
+=item B<--port> I<port>, B<-p> I<port>
+
+サーバーが起動するポート番号です。
+
+Default: C<55100>
+
+=item B<--cache> F</path/to/file>, B<-c> F</path/to/file>
+
+Google CGI API for Japanese にリクエストした結果をキャッシュするファイルのパスで
+す。
+
+Default: F<~/.cache/gisp.txt>
+
+=item B<--help>, B<-h>
+
+このヘルプを表示して終了します。
+
+=item B<--verbose>, B<-v>
+
+実行ログを標準出力に吐きます。エラーについてはこのオプションを指定しない場合も標
+準エラー出力に吐きます。
+
+=item B<--version>
+
+バージョン文字列を吐いて終了します。
+
+=back
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright 2023 JINNOUCHI Yasushi <me@delphinus.dev>
+
+This library is free software; you may redistribute it and/or modify it under
+the same terms as Perl itself.
+
+=head1 SEE ALSO
+
+=over
+
+=item *
+
+L<SKKServ - PySocialSKKServ Wiki - PySocialSKKServ - OSDN|https://ja.osdn.net/projects/pysocialskkserv/wiki/SKKServ>
+
+=back
+
+=cut
