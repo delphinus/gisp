@@ -4,9 +4,9 @@
 class Gisp < Formula
   desc 'Google IME for SKK'
   homepage 'https://github.com/delphinus/homebrew-gisp'
-  url 'https://github.com/delphinus/homebrew-gisp/archive/v1.0.1.tar.gz'
-  sha256 'b96af03ad1ab1e95b57beb87c5b713dc5587ef45b3e3b71da8bda75108bf3828'
-  version '1.0.1'
+  url 'https://github.com/delphinus/homebrew-gisp/archive/v1.0.2.tar.gz'
+  sha256 '0bf75032b0d3415d3bbf562e6982a505f0bc24f41f1979022163168a7143c265'
+  version '1.0.2'
   head 'https://github.com/delphinus/homebrew-gisp.git'
 
   service do
