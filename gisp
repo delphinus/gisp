@@ -105,8 +105,8 @@ sub search($kana, $cache_path, $now = time) {
                 ctime => $now,
                 kanji => $kanji,
             };
+            save_cache($cache_path);
         }
-        save_cache($cache_path);
         $kanji;
     }
 }
@@ -115,13 +115,15 @@ sub load_cache($cache_path) {
     if (!$cache_path->exists) {
         return +{};
     }
-    my @lines = $cache_path->lines_utf8;
+    my @lines = $cache_path->lines_utf8(+{ chomp => 1 });
     if (@lines == 0) {
         return +{};
     }
     $CACHE = reduce {
         my ($ctime, $kana, $kanji) = split /\t/, $b;
-        $a->{$kana} = +{ ctime => $ctime, kanji => $kanji };
+        if (defined $ctime && defined $kana && defined $kanji) {
+            $a->{$kana} = +{ ctime => $ctime, kanji => $kanji };
+        }
         $a;
     } +{}, $cache_path->lines_utf8;
 }
