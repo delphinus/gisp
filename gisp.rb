@@ -4,16 +4,17 @@
 class Gisp < Formula
   desc 'Google IME for SKK'
   homepage 'https://github.com/delphinus/homebrew-gisp'
-  url 'https://github.com/delphinus/homebrew-gisp/archive/v0.0.6.tar.gz'
-  sha256 'eeb393c278693095d48ba6a9ee09e770d18478ab0eec70236ccafdc722671c02'
-  version '0.0.6'
+  url 'https://github.com/delphinus/homebrew-gisp/archive/v1.0.0.tar.gz'
+  sha256 'cab1ccc3fe31d2f207ed6de5bf3dec94315d1b37d34e42708b0a11bdfa05c9d9'
+  version '1.0.0'
   head 'https://github.com/delphinus/homebrew-gisp.git'
 
   service do
-    run [bin / 'gisp', '-v']
+    run macos: [bin / 'gisp', '-v']
     keep_alive true
     log_path "#{Dir.home}/Library/Logs/gisp.log"
     error_log_path "#{Dir.home}/Library/Logs/gisp_error.log"
+    sockets '127.0.0.1:55100'
   end
 
   def install
