@@ -1,0 +1,13 @@
+name: Build check
+on:
+  push:
+jobs:
+  build:
+    runs-on: macos-13
+    steps:
+      - uses: Homebrew/actions/setup-homebrew@master
+      - uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - run: bin/github-generate-doc.sh
+      - run: /usr/bin/prove -v
