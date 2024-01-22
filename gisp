@@ -201,7 +201,7 @@ main if $0 eq __FILE__;
 
 =head1 NAME
 
-gisp - Google IME SKK for Perl
+gisp - Yet another Google IME for SKK
 
 =head1 SYNOPIS
 

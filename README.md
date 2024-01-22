@@ -1,6 +1,6 @@
 # NAME
 
-gisp - Google IME SKK for Perl
+gisp - Yet another Google IME for SKK
 
 # SYNOPIS
 

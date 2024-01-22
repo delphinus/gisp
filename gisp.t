@@ -182,7 +182,7 @@ subtest 'process()' => sub {
         };
 
         subtest 'when CLIENT_VERSION' => sub {
-            is request("2 \n"), VERSION_STRING() . ' ';
+            is request("2 \n"), "$main::VERSION_STRING ";
         };
 
         subtest 'when CLIENT_HOST' => sub {
