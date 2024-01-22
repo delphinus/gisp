@@ -120,6 +120,7 @@ sub load_cache($cache_path) {
         return +{};
     }
     $CACHE = reduce {
+        chomp $b;
         my ($ctime, $kana, $kanji) = split /\t/, $b;
         if (defined $ctime && defined $kana && defined $kanji) {
             $a->{$kana} = +{ ctime => $ctime, kanji => $kanji };
