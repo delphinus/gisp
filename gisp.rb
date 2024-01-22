@@ -14,7 +14,7 @@ class Gisp < Formula
     keep_alive true
     log_path "#{Dir.home}/Library/Logs/gisp.log"
     error_log_path "#{Dir.home}/Library/Logs/gisp_error.log"
-    sockets '127.0.0.1:55100'
+    sockets 'tcp://127.0.0.1:55100'
   end
 
   def install
