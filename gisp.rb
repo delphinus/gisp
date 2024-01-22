@@ -10,11 +10,9 @@ class Gisp < Formula
   head 'https://github.com/delphinus/homebrew-gisp.git'
 
   service do
-    run macos: [bin / 'gisp', '-v']
+    run macos: [bin / 'gisp']
     keep_alive true
-    log_path "#{Dir.home}/Library/Logs/gisp.log"
     error_log_path "#{Dir.home}/Library/Logs/gisp_error.log"
-    sockets 'tcp://127.0.0.1:55100'
   end
 
   def install
