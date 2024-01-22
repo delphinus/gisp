@@ -18,5 +18,6 @@ class Gisp < Formula
   def install
     inreplace 'gisp', /(?<=our \$VERSION = ').*(?=';)/, version.to_s
     bin.install 'gisp'
+    man1.install 'gisp.1'
   end
 end
