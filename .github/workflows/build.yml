@@ -10,4 +10,4 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - run: bin/github-generate-doc.sh
-      - run: /usr/bin/prove -v
+      - run: /usr/bin/prove -v .
